@@ -36,7 +36,6 @@
 static char *DEVICE_VERSION = "3630";
 static char *DEVICE_MANUFACUTRE = "ti";
 static bool sleep_mode = true;
-static bool backlight_pwm_state_change = false;
 
 
 static struct i2c_client *lm3630_client;
@@ -162,10 +161,7 @@ int set_backlight_pwm(int state)
 
     if(state == 1)
     {
-        if(lm3630_bkl_readout()>20)
-        {
-            rc = lm3630_i2c_write(0x01, LM3630_PWM_ON);
-        }
+        rc = lm3630_i2c_write(0x01, LM3630_PWM_ON);
     }
     else
     {
@@ -207,23 +203,6 @@ int lm3630_bkl_control(unsigned char bkl_level)
     rc = lm3630_i2c_write(0x03, bkl_level);
     pr_debug("%s: Neal lm3630_client set bkl level = %d, read level after write = %d ,rc = %d\n", __func__,(int)bkl_level,lm3630_bkl_readout(),rc);
 
-    /* OPPO 2013-10-28 gousj Add begin for pwm flicker */
-#ifdef CONFIG_VENDOR_EDIT
-    if(bkl_level <= 0x14)
-    {
-        rc = lm3630_i2c_write(0x01, LM3630_PWM_OFF);
-        backlight_pwm_state_change = true;
-        goto mark_back;
-    }
-    if(backlight_pwm_state_change == true)
-    {
-        rc = lm3630_i2c_write(0x01, LM3630_PWM_ON);
-        backlight_pwm_state_change = false;
-    }
-#endif //CONFIG_VENDOR_EDIT
-    /* OPPO 2013-10-28 gousj Add end */
-
-mark_back:
     return rc;
 }
 
